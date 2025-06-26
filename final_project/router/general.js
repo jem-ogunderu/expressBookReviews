@@ -68,38 +68,70 @@ public_users.get('/isbn/:isbn', async (req, res) => {
       res.status(404).json({ message: "Book with that ISBN doesn't exist!" });
     }
  });
+
+function getBooksAuthorAsync(author) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const bks = [];
+  
+        for (let key in books) {
+          if (books[key].author === author) {
+            bks.push(books[key]);
+          }
+        }
+  
+        if (bks.length > 0) {
+          resolve(bks);
+        } else {
+          reject(new Error("No books found by that author"));
+        }
+      }, 100);
+    });
+  }  
   
 // Get book details based on author
-public_users.get('/author/:author',function (req, res) {
+public_users.get('/author/:author', async (req, res) => {
   const author = req.params.author;
-  const bks =[];
-
-  for (let book in books){
-        if (books[book].author === author){
-            bks.push(books[book]);
-        }
-        else{
-            res.status(404).send({ message: ("Book with that author doesn't exist!")});
-        }
-  }
-  res.send(bks);
+    try{
+        const bookDeets = await getBooksAuthorAsync(author);
+        res.status(200).json(bookDeets);
+    }
+    catch {
+      res.status(404).json({ message: "Book with that author doesn't exist!" });
+    }
 });
 
-// Get all books based on title
-public_users.get('/title/:title',function (req, res) {
-    const title = req.params.title;
-    const bks =[];
+function getBooksTitleAsync(title) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const bks = [];
   
-    for (let book in books){
-          if (books[book].title === title){
-              bks.push(books[book]);
+        for (let key in books) {
+          if (books[key].title === title) {
+            bks.push(books[key]);
           }
-          else{
-            res.status(404).send({ message: ("Book with that title doesn't exist!")});
-          }
+        }
+  
+        if (bks.length > 0) {
+          resolve(bks);
+        } else {
+          reject(new Error("No books with that title found"));
+        }
+      }, 100);
+    });
+  } 
+
+// Get all books based on title
+public_users.get('/title/:title',async (req, res) => {
+    const title = req.params.title;
+    try{
+        const bookDeets = await getBooksTitleAsync(title);
+        res.status(200).json(bookDeets);
     }
-    res.send(bks);
-  });
+    catch {
+      res.status(404).json({ message: "Book with that title doesn't exist!" });
+    }
+});
 
 //  Get book review
 public_users.get('/review/:isbn', function (req, res) {
