@@ -5,9 +5,10 @@ const regd_users = express.Router();
 
 let users = [];
 
-const isValid = (username)=>{ //returns boolean
-//write code to check is the username is valid
-}
+const isValid = (username) => {
+    const userExists = users.find(user => user.username === username);
+    return !userExists;
+};
 
 const authenticatedUser = (username,password)=>{ //returns boolean
 //write code to check if username and password match the one we have in records.
@@ -15,27 +16,30 @@ const authenticatedUser = (username,password)=>{ //returns boolean
 }
 
 regd_users.post("/login", (req, res) => {
-    const { username, password } = req.body;
     
+    const username = req.body.username;
+    const password = req.body.password;
+
+    // Check if username or password is missing
     if (!username || !password) {
-      return res.status(400).json({ message: "Username and password required." });
+        return res.status(404).json({ message: "Error logging in" });
     }
-  
-    const user = authenticatedUser(username, password);
-  
-    if (!user) {
-      return res.status(401).json({ message: "Invalid credentials." });
+
+    // Authenticate user
+    if (authenticatedUser(username, password)) {
+        // Generate JWT access token
+        let accessToken = jwt.sign({
+            data: password
+        }, 'access', { expiresIn: 60 * 60 });
+
+        // Store access token and username in session
+        req.session.authorization = {
+            accessToken, username
+        }
+        return res.status(200).send("User successfully logged in");
+    } else {
+        return res.status(208).json({ message: "Invalid Login. Check username and password" });
     }
-  
-    const accessToken = jwt.sign(
-      { username }, 
-      'accessToken', 
-      { expiresIn: '1h' }
-    );
-  
-    req.session.authorization = { accessToken, username };
-  
-    return res.status(200).json({ message: "Login successful."});
 });
   
 
